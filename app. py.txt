@@ -1,0 +1,68 @@
+import streamlit as st
+import sympy as sp
+import numpy as np
+import matplotlib.pyplot as plt
+
+# إعدادات الصفحة
+st.set_page_config(page_title="المحلل الرياضي الذكي", layout="wide")
+
+st.title("🧮 المحلل الرياضي الشامل")
+st.write("أدخل أي معادلة رياضية (جبر، تفاضل، تكامل) وسيقوم النظام بتحليلها بالكامل.")
+
+# مدخلات المستخدم
+equation_str = st.text_input("اكتب المعادلة هنا (مثال: x**2 + 3*x + 2 أو sin(x))", "x**2 - 4")
+
+if equation_str:
+    try:
+        # تعريف المتغيرات والتعامل مع النص
+        x = sp.symbols('x')
+        expr = sp.sympify(equation_str)
+        
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.subheader("📊 التحليل الرياضي")
+            st.latex(f"f(x) = {sp.latex(expr)}")
+            
+            # 1. الحلول (Roots)
+            roots = sp.solve(expr, x)
+            st.info(f"**الجذور (القيم التي تجعل المعادلة 0):**")
+            for root in roots:
+                st.latex(sp.latex(root))
+
+            # 2. المشتقة والتكامل
+            st.write("---")
+            st.write("**المشتقة الأولى:**")
+            st.latex(sp.latex(sp.diff(expr, x)))
+            
+            st.write("**التكامل غير المحدود:**")
+            st.latex(sp.latex(sp.integrate(expr, x)))
+
+        with col2:
+            st.subheader("📈 الرسم البياني")
+            # تحويل المعادلة لدالة عددية للرسم
+            f = sp.lambdify(x, expr, 'numpy')
+            x_vals = np.linspace(-10, 10, 400)
+            try:
+                y_vals = f(x_vals)
+                
+                fig, ax = plt.subplots()
+                ax.plot(x_vals, y_vals, label=f'f(x) = {equation_str}', color='purple')
+                ax.axhline(0, color='black', lw=1)
+                ax.axvline(0, color='black', lw=1)
+                ax.grid(True, linestyle='--')
+                ax.legend()
+                st.pyplot(fig)
+            except:
+                st.error("لا يمكن رسم هذه الدالة بيانياً في هذا النطاق.")
+
+    except Exception as e:
+        st.error(f"عذراً، تأكد من صياغة المعادلة بشكل صحيح. الخطأ: {e}")
+
+st.sidebar.markdown("""
+### 💡 تعليمات الكتابة:
+* الضرب: `5*x`
+* الأس: `x**2`
+* الجذر: `sqrt(x)`
+* الدوال: `sin(x)`, `exp(x)`, `log(x)`
+""")
